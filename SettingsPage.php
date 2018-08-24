@@ -1,5 +1,7 @@
 <?php
 namespace AD_B2C_Auth;
+
+
 class SettingsPage
 {
     private const OPTION_GROUP_NAME = 'adb2c-group';
@@ -80,9 +82,10 @@ class SettingsPage
         );
 
         $this->add_settings_field('tenant_name', 'Tenant Name');
-        $this->add_settings_field('policy_name', 'Policy Name');
+        $this->add_settings_field('signin_signup_policy_name', 'SignInSignUp Policy Name');
+        $this->add_settings_field('password_reset_policy_name', 'Reset Password Policy Name');
         $this->add_settings_field('client_id', 'Client ID');
-        $this->add_settings_field('nonce_secret', 'No-Used-Once Secret');
+        $this->add_settings_field('nonce_secret', 'Number-Used-Once Secret');
 
     }
 

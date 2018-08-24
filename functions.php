@@ -76,21 +76,11 @@ add_action('wp_authenticate', 'login_redirector');
 function request_login( $redirect = null ) {
     $redirect_uri = urlencode(site_url() . '/');
     $state = array( 'redirect' => $redirect );
-    $state_json = json_encode($state);
+    $state = urlencode( base64_encode( json_encode($state) ) );
     try {
-        // Get the OpenID Provider Metadata document
-        $auth = Authentication::getInstance();
-        $metadata = $auth->getProviderMetadata();
-        $settings = Settings::getInstance();
-        // Build up the URL for login
-        $authorization_url = $metadata['authorization_endpoint'] . 
-                                '&client_id=' . $settings->getClientId() . 
-                                '&response_type=' . $settings->getResponseType() . 
-                                '&redirect_uri=' . $redirect_uri . 
-                                '&scope=' . $settings->getScope() . 
-                                '&nonce=' . NonceUtil::generate( $settings->getNonceSecret() ) . 
-                                '&response_mode=' . $settings->getResponseMode() . 
-                                '&state=' . urlencode( base64_encode($state_json) );
+        // Get the Authorization URL for login
+        $auth = Authentication::getSignInSignUpInstance();
+        $authorization_url = $auth->getAuthorizationUrl( $redirect_uri, $state );
         // Redirect to this URL
         wp_redirect($authorization_url);
     } catch (Exception $e) {
@@ -104,9 +94,11 @@ function request_login( $redirect = null ) {
 // If the token has been posted, it is processed and verified.
 function verify_token() {
     try {
+        check_for_password_change();
+
         check_for_error();
         
-        $auth = Authentication::getInstance();
+        $auth = Authentication::getSignInSignUpInstance();
 
         if ( $auth->isTokenPosted() ) {
 
@@ -136,6 +128,24 @@ function verify_token() {
     
 }
 add_action('wp_loaded', 'verify_token');
+
+function check_for_password_change() {
+    if (isset($_POST['error_description']) && strpos($_POST['error_description'], 'AADB2C90118') !== false) {
+        try {
+            $redirect_uri = urlencode(site_url() . '/');
+            $state = isset($_POST['state']) ? $_POST['state'] : null;
+            // Get the Authorization URL for login
+            $auth = Authentication::getPasswordResetInstance();
+            $authorization_url = $auth->getAuthorizationUrl( $redirect_uri, $state );
+            // Redirect to this URL
+            wp_redirect($authorization_url);
+            exit;
+        } catch (Exception $e) {
+            echo $e->getMessage();
+            exit;
+        }
+    }
+}
 
 function page_access_gatekeeper() {
     // If the page is not protected, do nothing
@@ -275,7 +285,7 @@ function oid_logout_url( $redirect = '' ) {
 
 // Returns true if the user is logged in with AD, false otherwise.
 function is_oid_user_logged_in() {
-    $auth = Authentication::getInstance();
+    $auth = Authentication::getSignInSignUpInstance();
     return $auth->isTokenValid();
 }
 
@@ -290,7 +300,7 @@ function get_is_protected() {
 
 // Returns the claim or null if it doesn't exist
 function get_claim($name, $default = null) {
-    $auth = Authentication::getInstance();
+    $auth = Authentication::getSignInSignUpInstance();
     $token = $auth->getToken();
 
     if (!$token->hasClaim($name)) { 

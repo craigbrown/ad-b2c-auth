@@ -20,14 +20,22 @@ class Authentication {
     private const TOKEN_POST_NAME = 'id_token';
     private const TOKEN_COOKIE_NAME = 'auth_id_token';
 
-    private static $instance;
-
-    public static function getInstance() {
-        if (!isset(self::$instance)) {
+    public static function getSignInSignUpInstance() {
+        static $inst = null;
+        if ($inst === null) {
             $settings = Settings::getInstance();
-            self::$instance = new Authentication($settings->getTenantName(), $settings->getPolicyName(), $settings->getClientId());
+            $inst = new self($settings->getTenantName(), $settings->getSignInSignUpPolicyName(), $settings->getClientId());
         }
-        return self::$instance;
+        return $inst;
+    }
+
+    public static function getPasswordResetInstance() {
+        static $inst = null;
+        if ($inst === null) {
+            $settings = Settings::getInstance();
+            $inst = new self($settings->getTenantName(), $settings->getPasswordResetPolicyName(), $settings->getClientId());
+        }
+        return $inst;
     }
 
     private $tenant;
@@ -58,6 +66,21 @@ class Authentication {
             throw new Exception('Unable to retrieve metadata from ' . $metadata_url);
         }
         return $decoded_response;
+    }
+
+    public function getAuthorizationUrl( $redirect_uri, $state ) {
+        // Get the OpenID Provider Metadata document
+        $metadata = $this->getProviderMetadata();
+        $settings = Settings::getInstance();
+        // Build up the URL for login
+        return $metadata['authorization_endpoint'] . 
+                '&client_id=' . $settings->getClientId() . 
+                '&response_type=' . $settings->getResponseType() . 
+                '&redirect_uri=' . $redirect_uri . 
+                '&scope=' . $settings->getScope() . 
+                '&nonce=' . NonceUtil::generate( $settings->getNonceSecret() ) . 
+                '&response_mode=' . $settings->getResponseMode() . 
+                '&state=' . $state;
     }
 
     public function getToken() {
@@ -96,7 +119,7 @@ class Authentication {
             return false;
         }
         // Get the OpenID Provider Metadata document
-        $metadata = $this->getProviderMetadata( $this->tenant, $this->policy_name );
+        $metadata = $this->getProviderMetadata();
 
         // Get the JWKSet
         $jwks = $this->getJWKSet( $metadata );
