@@ -22,9 +22,9 @@ class Authentication {
 
     private static $instance;
 
-    // TODO: fix this to get params from settings
-    public static function getInstance(Settings $settings) {
+    public static function getInstance() {
         if (!isset(self::$instance)) {
+            $settings = Settings::getInstance();
             self::$instance = new Authentication($settings->getTenantName(), $settings->getPolicyName(), $settings->getClientId());
         }
         return self::$instance;
