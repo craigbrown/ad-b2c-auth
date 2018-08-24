@@ -170,7 +170,7 @@ class Authentication {
         $validation_data = new ValidationData();
         $validation_data->setIssuer( $metadata['issuer'] );
         $validation_data->setAudience( $this->client_id );
-        $validation_data->setId( NONCE_SECRET );
+        $validation_data->setId( Settings::getInstance()->getNonceSecret() );
 
         // Validate the token
         return $token->validate($validation_data);
