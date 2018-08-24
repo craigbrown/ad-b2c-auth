@@ -81,7 +81,7 @@ function request_login( $redirect = null ) {
         // Get the OpenID Provider Metadata document
         $auth = Authentication::getInstance();
         $metadata = $auth->getProviderMetadata();
-        $settings = Settings::Instance();
+        $settings = Settings::getInstance();
         // Build up the URL for login
         $authorization_url = $metadata['authorization_endpoint'] . 
                                 '&client_id=' . $settings->getClientId() . 
@@ -106,7 +106,7 @@ function verify_token() {
     try {
         check_for_error();
         
-        $auth = Authentication::getInstance(Settings::Instance());
+        $auth = Authentication::getInstance();
 
         if ( $auth->isTokenPosted() ) {
 

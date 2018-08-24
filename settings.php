@@ -10,7 +10,7 @@ class Settings
 
     private $options;
 
-    public static function Instance() 
+    public static function getInstance() 
     {
         static $inst = null;
         if ($inst === null) {
