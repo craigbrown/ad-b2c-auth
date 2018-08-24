@@ -45,7 +45,7 @@ function request_logout() {
             return;
         }
         // Get the OpenID Provider Metadata document
-        $auth = Authentication::getInstance();
+        $auth = Authentication::getSignInSignUpInstance();
         $metadata = $auth->getProviderMetadata();
         // Build up the URL for logout
         $logout_url = $metadata['end_session_endpoint'] . 
