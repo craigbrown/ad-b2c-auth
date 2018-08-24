@@ -11,8 +11,7 @@ use AD_B2C_Auth\Authentication;
 use AD_B2C_Auth\Settings;
 use AD_B2C_Auth\NonceUtil;
 
-require_once "SettingsPage.php";
-require_once "settings.php";
+require_once "permission.php";
 
 /**
  * ACTIONS (CALLED BY WORDPRESS)
@@ -96,6 +95,8 @@ function verify_token() {
     try {
         check_for_password_change();
 
+        check_for_user_cancel();
+
         check_for_error();
         
         $auth = Authentication::getSignInSignUpInstance();
@@ -144,6 +145,26 @@ function check_for_password_change() {
             echo $e->getMessage();
             exit;
         }
+    }
+}
+
+/**
+ * Check for user cancelling a password reset or a sign-up.
+ */
+function check_for_user_cancel()
+{
+    if (isset($_POST['error_description']) && strpos($_POST['error_description'], 'AADB2C90091') !== false) {
+        // Redirect to the address we saved in 'state' if it exists
+        if ( !empty($_POST['state']) ) {
+            $state = json_decode( base64_decode( urldecode($_POST['state']) ) );
+            if (isset($state) && isset($state->redirect)) {
+                wp_redirect( $state->redirect );
+                exit;   
+            }
+        }
+        // Otherwise just redirect home
+        wp_redirect( site_url() . '/' );
+        exit;
     }
 }
 

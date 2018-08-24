@@ -70,9 +70,4 @@ class Settings
     }
 }
 
-
-function has_permission() {
-    return true;
-}
-
 ?>
