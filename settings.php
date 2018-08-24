@@ -41,22 +41,32 @@ class Settings
 
     public function getTenantName() : string
     {
-        return $this->options['tenant_name'] ?: 'exampletenantname.com';
+        return $this->getOption('tenant_name', 'exampletenantname.com');
     }
 
-    public function getPolicyName() : string
+    public function getSignInSignUpPolicyName() : string
     {
-        return $this->options['policy_name'] ?: 'example_policy_name';
+        return $this->getOption('signin_signup_policy_name', 'example_policy_name');
+    }
+
+    public function getPasswordResetPolicyName() : string
+    {
+        return $this->getOption('password_reset_policy_name', 'example_policy_name');
     }
 
     public function getClientId() : string
     {
-        return $this->options['client_id'] ?: 'example_client_id';
+        return $this->getOption('client_id', 'example_client_id');
     }
 
     public function getNonceSecret() : string
     {
-        return $this->options['nonce_secret'] ?: 'xxxxxxxxxxx';
+        return $this->getOption('nonce_secret', 'xxxxxxxxxxx');
+    }
+
+    private function getOption($field_id, $default_value)
+    {
+        return isset($this->options[$field_id]) ? $this->options[$field_id] : $default_value;
     }
 }
 
