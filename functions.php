@@ -8,8 +8,10 @@
  */
 
 use AD_B2C_Auth\Authentication;
+use AD_B2C_Auth\Settings;
 use AD_B2C_Auth\NonceUtil;
 
+require_once "SettingsPage.php";
 require_once "settings.php";
 
 /**
@@ -79,14 +81,15 @@ function request_login( $redirect = null ) {
         // Get the OpenID Provider Metadata document
         $auth = Authentication::getInstance();
         $metadata = $auth->getProviderMetadata();
+        $settings = Settings::Instance();
         // Build up the URL for login
         $authorization_url = $metadata['authorization_endpoint'] . 
-                                '&client_id=' . CLIENT_ID . 
-                                '&response_type=' . RESPONSE_TYPE . 
+                                '&client_id=' . $settings->getClientId() . 
+                                '&response_type=' . $settings->getResponseType() . 
                                 '&redirect_uri=' . $redirect_uri . 
-                                '&scope=' . SCOPE . 
-                                '&nonce=' . NonceUtil::generate( NONCE_SECRET ) . 
-                                '&response_mode=' . RESPONSE_MODE . 
+                                '&scope=' . $settings->getScope() . 
+                                '&nonce=' . NonceUtil::generate( $settings->getNonceSecret() ) . 
+                                '&response_mode=' . $settings->getResponseMode() . 
                                 '&state=' . urlencode( base64_encode($state_json) );
         // Redirect to this URL
         wp_redirect($authorization_url);
@@ -103,7 +106,7 @@ function verify_token() {
     try {
         check_for_error();
         
-        $auth = Authentication::getInstance();
+        $auth = Authentication::getInstance(Settings::Instance());
 
         if ( $auth->isTokenPosted() ) {
 
@@ -192,6 +195,9 @@ function oid_show_meta_box() {
 }
 
 function oid_save_meta_box( $post_id ) {   
+    if ( !isset($_POST['oid_meta_box_nonce']) ) {
+        return;
+    }
 	// verify nonce
 	if ( !wp_verify_nonce( $_POST['oid_meta_box_nonce'], basename(__FILE__) ) ) {
 		return $post_id; 
