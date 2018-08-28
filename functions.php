@@ -11,8 +11,6 @@ use AD_B2C_Auth\Authentication;
 use AD_B2C_Auth\Settings;
 use AD_B2C_Auth\NonceUtil;
 
-require_once "permission.php";
-
 /**
  * ACTIONS (CALLED BY WORDPRESS)
  */
@@ -177,7 +175,7 @@ function page_access_gatekeeper() {
         request_login( home_url( $wp->request ) );
     }
     // If the user is logged in, check they have permission to view the page
-    if (!has_permission()) {
+    if (!adb2c_has_permission()) {
         // If not, set the status to 403
         status_header(403);
     }
@@ -188,7 +186,7 @@ function show_403_if_forbidden( $template ) {
     // If the page is not protected, do nothing
     if ( !get_is_protected() ) return $template;
     // If the user is logged in, and they have permission to view the page, continue
-    if ( is_oid_user_logged_in() && has_permission() ) return $template;
+    if ( is_oid_user_logged_in() && adb2c_has_permission() ) return $template;
     // Otherwise, show the forbidden page (fallback to 404 then index)
     return locate_template( array( '403.php', '404.php', 'index.php' ) );
 }
@@ -278,6 +276,11 @@ function is_admin_login() {
 
 function is_admin_logout() {
     return !isset($_GET['oid']);
+}
+
+// Checks whether a logged-in user has permission to view the page. Returns true by default. Other plugins/themes can amend the value by hooking into this filter.
+function adb2c_has_permission() {
+    return apply_filters( 'adb2c_has_permission', true );
 }
 
 /**

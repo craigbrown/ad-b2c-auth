@@ -16,10 +16,19 @@ You must have the GMP module enabled in your PHP installation.
 
 ## How to use
 
-1. (Optional) Edit the `has_permission()` function in `permission.php` to put extra conditions on whether a logged in user has access to protected pages (e.g. ensuring a claim has a specific value).
-2. Compress the source code into a zip, and manually upload this to your WordPress site as a new plugin.
-3. In the WordPress admin area, go to Settings > AD B2C Settings, and fill in the details of your active directory. The 'Number-Used-Once Secret' should just be a random string.
-4. (Optional) Use the functions `oid_login_url()`, `oid_logout_url()`, and `is_oid_user_logged_in()` in your theme to allow users to log in and out.
+1. Compress the source code into a zip, and manually upload this to your WordPress site as a new plugin.
+2. In the WordPress admin area, go to Settings > AD B2C Settings, and fill in the details of your active directory. The 'Number-Used-Once Secret' should just be a random string.
+3. (Optional) Use the functions `oid_login_url()`, `oid_logout_url()`, and `is_oid_user_logged_in()` in your theme to provide links to allow users to log in and out.
+4. (Optional) In your theme, you can hook in to the `adb2c_has_permission` filter if you want to place extra conditions on whether a logged in user has access to protected pages (e.g. ensuring a claim has a specific value). For example:
+```php
+function has_permission() 
+{
+    // e.g. check a claim value
+    $claim_value = get_claim('my_custom_claim')
+    return !is_null( $claim_value ) && $claim_value == "allowed";
+}
+add_filter( 'adb2c_has_permission', 'has_permission' )
+```
 5. (Optional) Add a `403.php` template to your theme - this will be shown to users without permission to view a protected page.
 6. In the WP admin area, for any posts/pages you want protected check the "Hidden unless logged in" box on the Edit page. (If you can't see the box, make sure that "Azure Active Directory B2C Auth" is checked under "Screen Options").
 
