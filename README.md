@@ -29,6 +29,7 @@ function has_permission()
 }
 add_filter( 'adb2c_has_permission', 'has_permission' )
 ```
+5. (Optional) You can also hook in to the `adb2c_new_user` action. This will be executed whenever a user is returned from a successful sign up.
 5. (Optional) Add a `403.php` template to your theme - this will be shown to users without permission to view a protected page.
 6. In the WP admin area, for any posts/pages you want protected check the "Hidden unless logged in" box on the Edit page. (If you can't see the box, make sure that "Azure Active Directory B2C Auth" is checked under "Screen Options").
 
