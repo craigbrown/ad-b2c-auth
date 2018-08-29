@@ -80,6 +80,7 @@ function request_login( $redirect = null ) {
         $authorization_url = $auth->getAuthorizationUrl( $redirect_uri, $state );
         // Redirect to this URL
         wp_redirect($authorization_url);
+        exit;
     } catch (Exception $e) {
 		echo $e->getMessage();
 		exit;
@@ -106,6 +107,11 @@ function verify_token() {
                 return;
             }
 
+            // Send the email if necessary
+            if ( get_claim('newUser') ) {
+                do_action( 'adb2c_new_user' );
+            }
+
             // Remember the ID
             $auth->saveToken();
         } 
@@ -119,8 +125,12 @@ function verify_token() {
     if ( !empty($_POST['state']) ) {
         $state = json_decode( base64_decode( urldecode($_POST['state']) ) );
         if (isset($state) && isset($state->redirect)) {
-            wp_redirect( $state->redirect );
-            exit;   
+            // Allow amending of redirect URL (or setting to false/null to cancel the redirect)
+            $redirect = apply_filters( 'adb2c_will_redirect', $state->redirect );
+            if (!empty($redirect)) {
+                wp_safe_redirect( $redirect );
+                exit;
+            }
         }
         
     }
@@ -326,6 +336,10 @@ function get_is_protected() {
 function get_claim($name, $default = null) {
     $auth = Authentication::getSignInSignUpInstance();
     $token = $auth->getToken();
+
+    if (is_null($token)) {
+        return null;
+    }
 
     if (!$token->hasClaim($name)) { 
         return null;
