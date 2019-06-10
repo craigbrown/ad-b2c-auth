@@ -4,12 +4,30 @@
  * Plugin Name: Azure Active Directory B2C Authentication
  * Plugin URI: https://github.com/Frakur/ad-b2c-auth
  * Description: A plugin that allows users to log in using B2C policies
- * Version: 1.1
+ * Version: 1.2
  */
 
 use AD_B2C_Auth\Authentication;
 use AD_B2C_Auth\Settings;
 use AD_B2C_Auth\NonceUtil;
+
+//======================================
+/**
+ * HOW LOGIN WORKS
+ * 1. The WP Theme should use the oid_login_url() function to present a login button or link to the user.
+ * 2. When this URL is followed, the request_login() function is called which calculates the Azure AD B2C login URL, and redirects to it.
+ * 3. Azure AD B2C handles the login, and redirects the user back to WP.
+ * 4. When WP loads, the verify_token() function is called. If a token has been provided (as it will have been after a login), it is verified for authenticity here.
+ * 5. If successful, user is redirected to the page they were trying to get to (this can be specified in step 2). Themes can use the 'adb2c_will_redirect' filter to amend this URL prior to redirection.
+ */
+//======================================
+ /**
+  * HOW LOGOUT WORKS
+  * 1. The WP Theme should use the oid_logout_url() function to present a logout button or link to the user.
+  * 2. When this URL is followed, the request_logout() function is called which calculates the Azure AD B2C logout URL, and redirects to it.
+  * 3. Azure AD B2C handles the logout, then redirects the user back to the home page of the WP site.
+  */
+  //======================================
 
 /**
  * ACTIONS (CALLED BY WORDPRESS)
@@ -20,20 +38,17 @@ use AD_B2C_Auth\NonceUtil;
  */
 require 'vendor/autoload.php';
 
-// Overrides the builtin logout function
-if( !function_exists('wp_logout') ) {
-    function wp_logout() {
-        if (is_admin_logout()) {
-            wp_destroy_current_session();
-            wp_clear_auth_cookie();
-
-            do_action( 'wp_logout' );
-        } else {
-            request_logout();
-        }
+// If the login or logout pages are being loaded, call the necessary functions which will do the redirect.
+function login_logout_redirect() {
+    $cur_page = $_SERVER['REQUEST_URI'];
+    if (substr($cur_page, 0, 10) == '/oid-login') {
+        request_login();
+    }
+    elseif (substr($cur_page, 0, 11) == '/oid-logout') {
+        request_logout();
     }
 }
-
+add_action( 'template_redirect', 'login_logout_redirect' );
 
 // Called when logging out of AD B2C
 function request_logout() {
@@ -59,17 +74,7 @@ function request_logout() {
 	}
 }
 
-// Called when Wordpress login URL is requested.
-function login_redirector() {
-    // Don't redirect for admin logins
-    if (is_admin_login()) {
-        return;
-    }
-    request_login();
-}
-add_action('wp_authenticate', 'login_redirector');
-
-// If the 'oid' parameter is present in the GET request, user is redirect to AD login.
+// Called when logging in
 function request_login( $redirect = null ) {
     $redirect_uri = urlencode(site_url() . '/');
     $state = array( 'redirect' => $redirect );
@@ -299,22 +304,22 @@ function adb2c_has_permission() {
 
 // Returns the URL for logging in with AD.
 function oid_login_url( $redirect = '' ) {
-    $url = wp_login_url( $redirect );
-    if (strpos($url, '?') !== false) {
-        return $url . '&oid=1';
-    } else {
-        return $url . '?oid=1';
+    $url = '/oid-login';
+    if (empty($redirect)) {
+        return $url;
     }
+    $r = urlencode($redirect);
+    return $url . '?r=' . $r;
 }
 
 // Returns the URL for logging out from AD.
 function oid_logout_url( $redirect = '' ) {
-    $url = wp_logout_url( $redirect );
-    if (strpos($url, '?') !== false) {
-        return $url . '&oid=1';
-    } else {
-        return $url . '?oid=1';
+    $url = '/oid-logout';
+    if (empty($redirect)) {
+        return $url;
     }
+    $r = urlencode($redirect);
+    return $url . '?r=' . $r;
 }
 
 // Returns true if the user is logged in with AD, false otherwise.
