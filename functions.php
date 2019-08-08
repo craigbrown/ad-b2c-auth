@@ -4,7 +4,7 @@
  * Plugin Name: Azure Active Directory B2C Authentication
  * Plugin URI: https://github.com/Frakur/ad-b2c-auth
  * Description: A plugin that allows users to log in using B2C policies
- * Version: 1.2
+ * Version: 1.2.1
  */
 
 use AD_B2C_Auth\Authentication;
@@ -53,10 +53,6 @@ add_action( 'template_redirect', 'login_logout_redirect' );
 // Called when logging out of AD B2C
 function request_logout() {
     try {
-        // Don't redirect for admin logouts
-        if (is_admin_logout()) {
-            return;
-        }
         // Get the OpenID Provider Metadata document
         $auth = Authentication::getSignInSignUpInstance();
         $metadata = $auth->getProviderMetadata();
@@ -284,15 +280,6 @@ function check_for_error() {
     }
 }
 
-function is_admin_login() {
-    $admin_url = 'wp-admin/';
-    return !isset($_GET['oid']);
-}
-
-function is_admin_logout() {
-    return !isset($_GET['oid']);
-}
-
 // Checks whether a logged-in user has permission to view the page. Returns true by default. Other plugins/themes can amend the value by hooking into this filter.
 function adb2c_has_permission() {
     return apply_filters( 'adb2c_has_permission', true );
@@ -303,6 +290,7 @@ function adb2c_has_permission() {
  */
 
 // Returns the URL for logging in with AD.
+// NOTE: redirect parameter not yet working
 function oid_login_url( $redirect = '' ) {
     $url = '/oid-login';
     if (empty($redirect)) {
@@ -313,6 +301,7 @@ function oid_login_url( $redirect = '' ) {
 }
 
 // Returns the URL for logging out from AD.
+// NOTE: redirect parameter not yet working
 function oid_logout_url( $redirect = '' ) {
     $url = '/oid-logout';
     if (empty($redirect)) {
