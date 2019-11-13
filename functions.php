@@ -4,7 +4,7 @@
  * Plugin Name: Azure Active Directory B2C Authentication
  * Plugin URI: https://github.com/Frakur/ad-b2c-auth
  * Description: A plugin that allows users to log in using B2C policies
- * Version: 1.2.1
+ * Version: 1.2.2
  */
 
 use AD_B2C_Auth\Authentication;
