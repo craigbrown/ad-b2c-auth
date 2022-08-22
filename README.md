@@ -1,3 +1,9 @@
+# AUG 2022: THIS REPOSITORY IS NOW ARCHIVED
+I don't think anyone is using this but I've now archived this. We're not using it anymore as we moved on from WordPress. I'll leave it here for posterity, but it hasn't been touched in several years and probably contains security vulnerabilities, so I wouldn't recommend anyone else uses it now.
+
+
+----
+
 # Azure AD B2C Auth / WordPress Plugin
 
 A WordPress plugin that allows you to protect certain posts so they can only be accessed by users in an Azure Active Directory (B2C).
